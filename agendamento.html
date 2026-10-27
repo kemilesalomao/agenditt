@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Agendamento — AgendIt</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #D4AF37; --primary-soft: rgba(212,175,55,0.12); --primary-05: color-mix(in srgb, var(--primary) 5%, transparent); --primary-14: color-mix(in srgb, var(--primary) 14%, transparent); --primary-15: color-mix(in srgb, var(--primary) 15%, transparent); --primary-25: color-mix(in srgb, var(--primary) 25%, transparent); --primary-30: color-mix(in srgb, var(--primary) 30%, transparent); --primary-40: color-mix(in srgb, var(--primary) 40%, transparent); --primary-50: color-mix(in srgb, var(--primary) 50%, transparent); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0E0E14; color: #F5F1E8; font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .chat-header { position: relative; background: linear-gradient(150deg, #1A1608 0%, #12100A 55%, #0E0E14 100%); border-bottom: 1px solid var(--primary-25); padding: 15px 20px; display: flex; align-items: center; gap: 15px; z-index: 10; }
+    .chat-header::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--primary-50), transparent); }
+    .chat-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #1A1A22; padding: 3px; border: 1px solid var(--primary-40); }
+    .chat-header h1 { font-size: 1.15rem; margin: 0; font-weight: 700; font-family: 'Playfair Display', serif; color: #F5F1E8; }
+    .chat-header .status { font-size: 0.8rem; margin: 0; color: #9C9AA6; display: flex; align-items: center; gap: 6px; }
+    .chat-header .status .dot-online { width: 8px; height: 8px; border-radius: 50%; background: #25D366; box-shadow: 0 0 8px rgba(37,211,102,0.8); }
+    .chat-back { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid var(--primary-30); color: var(--primary); cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+    .chat-back:hover { background: var(--primary); border-color: var(--primary); color: #14100A; }
+    .chat-back svg { width: 20px; height: 20px; }
+
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; background:
+        radial-gradient(600px 300px at 20% 0%, var(--primary-05), transparent 60%),
+        #0E0E14; }
+
+    .message { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 0.94rem; line-height: 1.5; animation: fadeIn 0.3s ease; position: relative; word-break: break-word; }
+    .message.bot { background: #1A1A22; color: #E6E3DC; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--primary-14); box-shadow: 0 4px 14px -6px rgba(0,0,0,0.5); }
+    .message.user { background: var(--primary); color: #14100A; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; box-shadow: 0 6px 18px -8px rgba(0,0,0,0.5); }
+
+    .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+    .option-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--primary-30); color: var(--primary); padding: 13px 15px; border-radius: 12px; font-weight: 600; font-family: 'Inter', sans-serif; font-size: 0.92rem; cursor: pointer; text-align: left; transition: 0.2s; }
+    .option-btn:hover { background: var(--primary); border-color: var(--primary); color: #14100A; transform: translateY(-1px); }
+    .option-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .option-btn small { display: block; font-size: 0.78rem; opacity: 0.8; margin-top: 4px; font-weight: 500; }
+    .svc-btn { display: flex; align-items: center; gap: 12px; }
+    .svc-thumb { flex: none; width: 48px; height: 48px; border-radius: 10px; background-size: cover; background-position: center; background-color: rgba(255,255,255,0.06); }
+
+    .date-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    .chip-btn { background: rgba(255,255,255,0.04); border: 1px solid #2A2A34; color: #CFCDD6; padding: 11px 5px; border-radius: 10px; text-align: center; cursor: pointer; font-size: 0.88rem; font-family: 'Inter', sans-serif; transition: 0.18s; }
+    .chip-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .chip-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: #2A2A34; }
+
+    .chat-input-area { background: #121218; border-top: 1px solid var(--primary-15); padding: 14px 16px; display: flex; gap: 10px; align-items: center; }
+    .chat-input { flex: 1; padding: 13px 18px; background: #1B1B24; border: 1px solid #2A2A34; border-radius: 999px; font-size: 0.95rem; font-family: 'Inter', sans-serif; outline: none; color: #F5F1E8; transition: 0.2s; }
+    .chat-input::placeholder { color: #6E6D7A; }
+    .chat-input:focus { border-color: var(--primary-40); }
+    .send-btn { background: var(--primary); color: #14100A; border: none; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.15rem; transition: 0.2s; box-shadow: 0 6px 18px -6px var(--primary-50); }
+    .send-btn:hover { transform: scale(1.05); }
+    .send-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 5px 10px; }
+    .dot { width: 7px; height: 7px; background: var(--primary); border-radius: 50%; animation: blink 1.4s infinite both; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+    @media (max-width: 480px) {
+      .chat-container { padding: 14px; }
+      .message { max-width: 92%; font-size: 0.9rem; padding: 11px 14px; }
+      .time-grid { grid-template-columns: repeat(3, 1fr); }
+      .chat-input-area { padding: 12px 12px; }
+      .chat-input { font-size: 0.9rem; }
+      .chat-header { padding: 13px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-header" id="chat-header">
+    <button type="button" class="chat-back" id="chat-back" title="Voltar" aria-label="Voltar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <img src="Logo_Agendit.jpg" alt="Logo" id="biz-logo">
+    <div>
+      <h1 id="biz-name">AgendIt</h1>
+      <p class="status" id="biz-status"><span class="dot-online"></span> Assistente Virtual · Online</p>
+    </div>
+  </div>
+
+  <div class="chat-container" id="chat-container">
+    <!-- Messages will be injected here by JS -->
+  </div>
+
+  <div class="chat-input-area">
+    <input type="text" id="chat-input" class="chat-input" placeholder="Digite sua resposta..." disabled>
+    <button class="send-btn" id="send-btn" disabled>➤</button>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="bizapi.js"></script>
+  <script>
+    // Página pública REAL: lê o negócio pelo slug (?b=...) e grava no banco.
+    const SLUG = new URLSearchParams(location.search).get('b') || '';
+    let PB = null;
+    let state = 'INIT';
+    let booking = {};
+
+    const DEFAULT_CHAT = { title: 'Assistente Virtual', subtitle: 'Online', greeting: 'Olá! Bem-vindo(a) ao atendimento da {loja}. 🗓️', askName: 'Como posso chamar você? (Digite seu nome abaixo)', askPhone: 'Prazer, {nome}! Qual seu telefone? (só números com DDD)', phoneBad: 'Hmm, esse telefone parece incompleto. Pode digitar novamente? (DDD + número)', askService: 'Perfeito! O que você gostaria de agendar hoje?', serviceTitle: 'Selecione um serviço:', noServices: 'No momento não há serviços disponíveis. Tente mais tarde.', askStaff: 'Ótimo! Você escolheu {servico}. Com qual profissional deseja ser atendido?', noDates: 'Este profissional não tem horários livres nos próximos dias. Escolha outro:', askDate: 'Perfeito! Para qual dia você prefere?', noSlots: 'Sem horários livres neste dia. Escolha outra data:', askTime: 'E qual o melhor horário para você?', summary: 'Confira seu pedido:\n\n👤 {nome}\n💇 {servico}{prof}\n📅 {data} às {hora}\n💰 R$ {valor} — pago na empresa\n\nO pagamento não é feito aqui: você acerta com a empresa na hora do atendimento. 💬', postBook: '✅ Pedido registrado:\n\n👤 {nome}\n💇 {servico}{prof}\n📅 {data} às {hora}\n💰 R$ {valor}\n\n🔒 Pagamento: para garantir seu horário, é necessário pagar o sinal de 50% antes do atendimento. Você será encaminhada para o WhatsApp da loja para combinar o pagamento. 💬', waMsg: 'Olá, fiz um agendamento pelo site e gostaria de confirmar meu horário.\n\n👤 Nome: {nome}\n📅 Data: {data} às {hora}\n💇 Serviço: {servico}\n💰 Valor total: R$ {valor}\n💵 Entrada (50%): R$ {sinal}\n\nGostaria de pagar a entrada para confirmar meu agendamento. Aguardo informações para pagamento. Obrigado(a).', extraQuestions: [], askProfessional: true, askSinal: true
+    };
+    let C = Object.assign({}, DEFAULT_CHAT);
+    booking.extras = [];
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function tpl(s, m) { let out = s || ''; Object.keys(m).forEach(k => { out = out.split('{' + k + '}').join(m[k] == null ? '' : String(m[k])); }); return out; }
+    function tplH(s, m) { const mm = {}; Object.keys(m).forEach(k => { mm[k] = esc(m[k]); }); return tpl(s, mm); }
+
+    const chatContainer = document.getElementById('chat-container');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    document.getElementById('chat-back').addEventListener('click', () => {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = 'index.html';
+    });
+
+    function setInput(on, ph) {
+      chatInput.disabled = !on;
+      sendBtn.disabled = !on;
+      if (ph) chatInput.placeholder = ph;
+      if (on) chatInput.focus();
+    }
+    function addMessage(text, sender = 'bot', isHtml = false) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${sender}`;
+      if (isHtml) msgDiv.innerHTML = text;
+      else msgDiv.textContent = text;
+      chatContainer.appendChild(msgDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    function addTyping() {
+      const id = 'typing-' + Date.now();
+      addMessage(`<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`, 'bot', true);
+      chatContainer.lastChild.id = id;
+      return id;
+    }
+    function removeTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
+    async function botReply(text, isHtml = false, delay = 800) {
+      const typingId = addTyping();
+      return new Promise(resolve => {
+        setTimeout(() => { removeTyping(typingId); addMessage(text, 'bot', isHtml); resolve(); }, delay);
+      });
+    }
+    function lockOptions() { document.querySelectorAll('.option-btn,.chip-btn').forEach(b => b.disabled = true); }
+
+    /* ---------- Modo demonstração (sem negócio real) ---------- */
+    const DEMO_SERVICES = [
+      { id: 'd1', name: '💇 Corte de Cabelo', price: 'R$ 50', duration: '40 min' },
+      { id: 'd2', name: '🧔 Barba', price: 'R$ 30', duration: '20 min' },
+      { id: 'd3', name: '✨ Sobrancelha', price: 'R$ 25', duration: '15 min' },
+      { id: 'd4', name: '💅 Manicure', price: 'R$ 45', duration: '60 min' }
+    ];
+    const DEMO_DAYS = ['Hoje', 'Amanhã', 'Sexta-feira'];
+    const DEMO_TIMES = ['09:30', '14:00', '18:30'];
+
+    function demoOptions(items) {
+      let html = '<div class="options-grid">';
+      items.forEach(it => { html += '<button class="option-btn" onclick="demoPick(\'' + it.k + '\',\'' + it.v + '\',this)">' + it.label + '</button>'; });
+      html += '</div>';
+      addMessage(html, 'bot', true);
+    }
+    async function startDemoChat() {
+      document.getElementById('biz-name').textContent = 'AgendIt — Demonstração';
+      document.getElementById('biz-status').innerHTML = '<span class="dot-online"></span> Modo demonstração';
+      document.getElementById('biz-logo').src = 'Agendit_logo-wt-nobg.png';
+      document.title = 'Demonstração — AgendIt';
+      state = 'DEMO_NAME';
+      await botReply('Olá! Bem-vindo(a) à demonstração do AgendIt 🗓️');
+      await botReply('Como posso chamar você?');
+      setInput(true, 'Digite seu nome...');
+    }
+    window.demoPick = async function (kind, val, btn) {
+      lockOptions();
+      addMessage(val, 'user');
+      if (kind === 'service') {
+        booking.service = DEMO_SERVICES.find(s => s.id === val);
+        await botReply('Perfeito! Qual dia você prefere?');
+        demoOptions(DEMO_DAYS.map(d => ({ k: 'day', v: d, label: d })));
+      } else if (kind === 'day') {
+        booking.day = val;
+        await botReply('E qual o melhor horário?');
+        demoOptions(DEMO_TIMES.map(t => ({ k: 'time', v: t, label: t })));
+      } else if (kind === 'time') {
+        booking.time = val;
+        const s = booking.service;
+        await botReply('✅ <b>Agendamento finalizado!</b><br><br>👤 ' + esc(booking.clientName) + '<br>💇 ' + esc(s.name) + '<br>📅 ' + esc(booking.day) + ' às ' + booking.time + '<br>💰 ' + s.price + ' — pago na empresa', true, 900);
+        await botReply('📌 <b>Importante:</b> para cancelar, o cliente deve avisar com até <b>1 hora de antecedência</b>. Cancelamentos em cima da hora podem gerar taxa.', true, 900);
+        await botReply('🎉 Isso foi só uma demonstração. Crie sua conta e ative este chatbot no seu negócio em minutos.', true);
+        demoOptions([{ k: 'cta', v: '', label: '🚀 Quero criar minha conta' }]);
+        state = 'DONE';
+      } else if (kind === 'cta') {
+        window.location.href = 'checkout.html';
+      }
+    };
+
+    async function boot() {
+      if (!SLUG) { await startDemoChat(); return; }
+      try { PB = await Api.pub(SLUG); }
+      catch (e) {
+        addMessage('Não encontrei esta página de agendamento. Confira o link e tente novamente.');
+        return;
+      }
+      C = Object.assign({}, DEFAULT_CHAT, PB.chat || {});
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
+      document.documentElement.style.setProperty('--primary', PB.business.color || '#D4AF37');
+      document.getElementById('biz-name').textContent = PB.business.name;
+      document.getElementById('biz-status').innerHTML = '<span class="dot-online"></span> ' + esc(C.subtitle || DEFAULT_CHAT.subtitle);
+      document.getElementById('biz-logo').src = String(PB.business.logo || '').startsWith('data:application/pdf') ? 'Logo_Agendit.jpg' : (PB.business.logo || 'Logo_Agendit.jpg');
+      document.title = 'Agendar — ' + PB.business.name;
+      startChat();
+    }
+
+    async function startChat() {
+      await botReply(tpl(C.greeting, { loja: PB.business.name }));
+      await botReply(C.askName);
+      setInput(true);
+      state = 'AWAITING_NAME';
+    }
+
+    async function handleInput(val) {
+      if (!val || state === 'INIT' || state === 'DONE') return;
+      addMessage(val, 'user');
+      chatInput.value = '';
+      setInput(false);
+      if (state === 'DEMO_NAME') {
+        booking.clientName = val;
+        setTimeout(async () => {
+          await botReply('Prazer, ' + esc(val) + '! 😄 Isso é só uma demonstração — no seu negócio, o cliente escolheria aqui:');
+          demoOptions(DEMO_SERVICES.map(s => ({ k: 'service', v: s.id, label: s.name + ' <small>R$ ' + s.price.replace('R$ ', '') + ' • ' + s.duration + '</small>' })));
+          state = 'DEMO_SERVICE';
+        }, 350);
+      }
+      else if (state === 'AWAITING_NAME') {
+        booking.clientName = val;
+        if (PB.rules.requirePhone) {
+          await botReply(tpl(C.askPhone, { nome: val }));
+          setInput(true, 'Ex: 11999999999');
+          state = 'AWAITING_PHONE';
+        } else {
+          booking.phone = '';
+          startExtras();
+        }
+      } else if (state === 'AWAITING_PHONE') {
+        const digits = val.replace(/\D/g, '');
+        if (digits.length < 10) {
+          await botReply(C.phoneBad);
+          setInput(true);
+          return;
+        }
+        booking.phone = digits;
+        startExtras();
+      } else if (state === 'EXTRA') {
+        const qs = C.extraQuestions || [];
+        const i = booking.extras.length;
+        const q = qs[i];
+        const v = val.trim();
+        if (q && q.required && !v) {
+          await botReply('Essa resposta é obrigatória. Pode responder?');
+          setInput(true);
+          return;
+        }
+        booking.extras.push({ q: q ? q.label : '', a: v || '—' });
+        lockOptions();
+        askNextExtra();
+      }
+    }
+    function startExtras() {
+      if (!C.extraQuestions || !C.extraQuestions.length) { askServiceVor(); return; }
+      askNextExtra();
+    }
+    function askNextExtra() {
+      const qs = C.extraQuestions || [];
+      const i = booking.extras.length;
+      if (i >= qs.length) { askServiceVor(); return; }
+      state = 'EXTRA';
+      const q = qs[i];
+      botReply(q.label);
+      if (!q.required) {
+        setTimeout(() => addMessage('<div class="options-grid"><button class="option-btn" onclick="skipExtra()">Pular esta pergunta</button></div>', 'bot', true), 450);
+      }
+      setInput(true);
+    }
+    function skipExtra() {
+      const qs = C.extraQuestions || [];
+      const i = booking.extras.length;
+      const q = qs[i];
+      if (!q) return;
+      booking.extras.push({ q: q.label, a: '—' });
+      lockOptions();
+      askNextExtra();
+    }
+    async function askServiceVor() {
+      await botReply(C.askService);
+      showServices();
+    }
+    sendBtn.addEventListener('click', () => handleInput(chatInput.value.trim()));
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleInput(e.target.value.trim()); });
+
+    function showServices() {
+      if (!PB.services.length) { botReply(C.noServices); return; }
+      let html = `<div class="options-grid">`;
+      PB.services.forEach(s => {
+        const hasImg = s.image && String(s.image).length > 10;
+        const img = hasImg ? `<span class="svc-thumb" style="background-image:url('${String(s.image).replace(/'/g, '%27')}')"></span>` : '';
+        html += `<button class="option-btn svc-btn" onclick="selectService('${s.id}')">${img}<span>${esc(s.name)} <small>R$ ${Number(s.price).toFixed(2)} • ${s.duration} min</small></span></button>`;
+      });
+      html += `</div>`;
+      botReply(C.serviceTitle, true, 400);
+      setTimeout(() => addMessage(html, 'bot', true), 450);
+      state = 'SERVICE';
+    }
+    window.selectService = async function(id) {
+      const svc = PB.services.find(s => s.id === id);
+      if (!svc) return;
+      booking.service = svc;
+      addMessage(svc.name, 'user');
+      lockOptions();
+      const opts = PB.staff.filter(e => (svc.staffIds || []).includes(e.id));
+      if (!opts.length || C.askProfessional === false) {
+        booking.staff = null;
+        showDates();
+        return;
+      }
+      await botReply(tpl(C.askStaff, { servico: svc.name }));
+      let html = `<div class="options-grid">`;
+      opts.forEach(e => { html += `<button class="option-btn" onclick="selectStaff('${e.id}')">${e.name}${e.specialty ? ' <small>' + e.specialty + '</small>' : ''}</button>`; });
+      html += `</div>`;
+      addMessage(html, 'bot', true);
+      state = 'STAFF';
+    };
+
+    function staffOpenDays() {
+      const biz = new Set(PB.openDays || [1, 2, 3, 4, 5, 6]);
+      const emp = booking.staff || {};
+      const empDays = new Set(emp.days && emp.days.length ? emp.days : biz);
+      const off = new Set(emp.daysOff || []);
+      const bad = new Set(booking.badDates || []);
+      const maxD = Math.min(PB.rules.maxAdvanceDays || 30, 60);
+      const out = [];
+      for (let i = 0; i < maxD && out.length < 12; i++) {
+        const d = new Date(); d.setDate(d.getDate() + i);
+        if (!biz.has(d.getDay()) || !empDays.has(d.getDay())) continue;
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (off.has(iso) || bad.has(iso)) continue;
+        out.push({ iso, label: d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }) });
+      }
+      return out;
+    }
+    function showDates() {
+      const dates = staffOpenDays();
+      if (!dates.length) {
+        botReply(C.noDates);
+        const opts = PB.staff.filter(e => (booking.service.staffIds || []).includes(e.id));
+        let html = `<div class="options-grid">`;
+        opts.forEach(e => { html += `<button class="option-btn" onclick="selectStaff('${e.id}')">${e.name}${e.specialty ? ' <small>' + e.specialty + '</small>' : ''}</button>`; });
+        html += `</div>`;
+        setTimeout(() => addMessage(html, 'bot', true), 450);
+        state = 'STAFF';
+        return;
+      }
+      botReply(C.askDate);
+      setTimeout(() => addMessage(`<div class="date-grid">` + dates.map(o => `<button class="chip-btn" onclick="selectDate('${o.iso}','${o.label}')">${o.label}</button>`).join('') + `</div>`, 'bot', true), 450);
+      state = 'DATE';
+    }
+    window.selectStaff = async function(id) {
+      const emp = PB.staff.find(e => e.id === id);
+      if (!emp) return;
+      booking.staff = emp;
+      addMessage(emp.name, 'user');
+      lockOptions();
+      showDates();
+    };
+
+    window.selectDate = async function(iso, label) {
+      booking.date = iso;
+      addMessage(label, 'user');
+      lockOptions();
+      await botReply('Buscando horários livres...', false, 500);
+      let slots = [];
+      try {
+        const r = await Api.slots(SLUG, { serviceId: booking.service.id, staffId: booking.staff ? booking.staff.id : '', date: iso });
+        slots = r.slots || [];
+      } catch (e) { await botReply(e.message || 'Falha ao buscar horários.'); return; }
+      if (!slots.length) {
+        booking.badDates = booking.badDates || [];
+        booking.badDates.push(iso);
+        await botReply(C.noSlots);
+        showDates();
+        return;
+      }
+      await botReply(C.askTime);
+      let html = `<div class="time-grid">`;
+      slots.forEach(t => { html += `<button class="chip-btn" onclick="selectTime('${t}')">${t}</button>`; });
+      html += `</div>`;
+      addMessage(html, 'bot', true);
+      state = 'TIME';
+    };
+    window.selectTime = async function(t) {
+      booking.time = t;
+      addMessage(t, 'user');
+      lockOptions();
+      if (!booking.staff && C.askProfessional === false) {
+        const cands = PB.staff.filter(e => (booking.service.staffIds || []).includes(e.id));
+        for (const e of cands) {
+          try {
+            const rr = await Api.slots(SLUG, { serviceId: booking.service.id, staffId: e.id, date: booking.date });
+            if ((rr.slots || []).includes(t)) { booking.staff = e; break; }
+          } catch (e2) { /* tenta o próximo */ }
+        }
+      }
+      let mm = { nome: booking.clientName, servico: booking.service.name, prof: booking.staff ? '\n🧑‍💼 ' + booking.staff.name : '', data: booking.date.split('-').reverse().join('/'), hora: t, valor: Number(booking.service.price).toFixed(2), respostas: (C.extraQuestions || []).length && (booking.extras || []).length ? booking.extras.map(e => e.q + ': ' + e.a).join('\n') : '' };
+      const resumo = tplH(C.summary, mm).replace(/\n/g, '<br>');
+      await botReply(resumo, true);
+      addMessage(`<div class="options-grid"><button class="option-btn" style="background:var(--primary);color:#14100A;text-align:center;border:none;" onclick="confirmBooking()">✅ Registrar pedido</button></div>`, 'bot', true);
+      state = 'CONFIRM';
+    };
+
+    function urlBase64ToUint8Array(base64) {
+      const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+      const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(b64);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      return bytes;
+    }
+    window.ativarPush = async function(appointmentId) {
+      try {
+        if (!PB || !PB.push || !PB.push.publicKey) throw new Error('Notificações não estão configuradas neste site.');
+        if (typeof Notification === 'undefined' || !('serviceWorker' in navigator)) throw new Error('Seu navegador não suporta notificações.');
+        let perm = Notification.permission;
+        if (perm === 'denied') throw new Error('Você bloqueou as notificações no navegador. Libere nas configurações e tente de novo.');
+        if (perm !== 'granted') perm = await Notification.requestPermission();
+        if (perm !== 'granted') throw new Error('Permissão não concedida. Como não deu autorização, não vamos enviar notificações.');
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(PB.push.publicKey) });
+        await Api.pubPush(SLUG, 'register', { appointmentId, subscription: sub.toJSON() });
+        lockOptions();
+        await botReply('🔔 <b>Notificações ativadas!</b><br><br>Você vai receber avisos quando a empresa <b>confirmar</b>, <b>alterar</b> ou <b>cancelar</b> seu pedido — e lembretes <b>24h</b> e <b>1h antes</b> do seu horário.', true);
+      } catch (e) {
+        await botReply('🔔 ' + (e.message || 'Não foi possível ativar as notificações.'), true);
+      }
+    };
+
+    function waNormalize(v) { let d = (v || '').replace(/\D/g, ''); if (d && !/^55/.test(d) && d.length <= 11) d = '55' + d; return d; }
+
+    window.confirmBooking = async function() {
+      lockOptions();
+      await botReply('Só um momento, registrando seu pedido...', false, 600);
+      try {
+        const r = await Api.book(SLUG, {
+          clientName: booking.clientName, phone: booking.phone || '',
+          serviceId: booking.service.id, staffId: booking.staff ? booking.staff.id : '',
+          date: booking.date, time: booking.time,
+          notes: (booking.extras || []).length ? booking.extras.map(e => e.q + ': ' + e.a).join('\n') : ''
+        });
+
+        const mm2 = { nome: booking.clientName, servico: booking.service.name, prof: booking.staff ? '\n🧑‍💼 ' + booking.staff.name : '', data: booking.date.split('-').reverse().join('/'), hora: booking.time, valor: Number(booking.service.price).toFixed(2), respostas: (C.extraQuestions || []).length && (booking.extras || []).length ? booking.extras.map(e => e.q + ': ' + e.a).join('\n') : '' };
+        await botReply(tplH(C.postBook, mm2).replace(/\n/g, '<br>'), true);
+        const smin = Number((PB.rules || {}).sinalMinutes) || 0;
+        if (smin > 0) addMessage('⏳ Seu horário fica <b>reservado por ' + smin + ' min</b> aguardando a confirmação do sinal. Se o pagamento não for combinado nesse prazo, o horário será <b>liberado automaticamente</b> para outras clientes.', 'bot', true);
+        const cancelOn = C.cancelNotice !== false;
+        const askSinal = C.askSinal !== false;
+        let botoes = '';
+        if (cancelOn) {
+          const h = Number(C.cancelHours) || 1;
+          const txt = (C.cancelMsg || '📌 Aviso de cancelamento: para cancelar seu pedido, avise com até {horas} de antecedência.').replace(/\{horas\}/g, h + (h === 1 ? ' hora' : ' horas'));
+          addMessage(txt, 'bot', true);
+          const waNum = waNormalize(PB.business.whatsapp);
+          if (waNum) {
+            const falaMsg = tpl(C.cancelWaMsg || 'Olá! 👋 Fiz um agendamento pelo site e gostaria de falar com vocês:\n\n👤 Nome: {nome}\n💇 Serviço: {servico}\n📅 Data: {data} às {hora}\n\nQuando puderem, me respondam por aqui. Obrigado!', { nome: booking.clientName, servico: booking.service.name, data: mm2.data, hora: booking.time });
+            botoes += `<button class="option-btn" style="text-align:center;background:var(--primary);color:#14100A;border:none;" onclick="window.open('https://wa.me/${waNum}?text=${encodeURIComponent(falaMsg)}','_blank')">💬 Falar com o proprietário no WhatsApp</button>`;
+          }
+        }
+        if (askSinal) {
+          const sinal = (Number(booking.service.price) * 0.5).toFixed(2);
+          const sinalMsg = tpl(C.waMsg, { nome: booking.clientName, servico: booking.service.name, data: mm2.data, hora: booking.time, valor: mm2.valor, sinal, respostas: mm2.respostas });
+          const waNum = waNormalize(PB.business.whatsapp);
+          if (waNum) {
+            botoes += `<button class="option-btn" style="text-align:center;background:var(--primary);color:#14100A;border:none;" onclick="window.open('https://wa.me/${waNum}?text=${encodeURIComponent(sinalMsg)}','_blank')">💬 Pagar sinal (50%) no WhatsApp</button>`;
+          }
+        }
+        if (botoes) addMessage(`<div class="options-grid">${botoes}</div>`, 'bot', true);
+        state = 'DONE';
+      } catch (e) {
+        await botReply('❌ ' + (e.message || 'Não foi possível concluir. Tente outro horário.'));
+        state = 'TIME';
+      }
+    };
+
+    setTimeout(boot, 400);
+  </script>
+</body>
+</html>

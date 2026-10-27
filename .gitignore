@@ -1,0 +1,18 @@
+# Node
+node_modules/
+backend/node_modules/
+
+# Banco local (schema recriado na inicialização)
+backend/agendit.db
+backend/agendit.db-shm
+backend/agendit.db-wal
+
+# Segredos e credenciais
+backend/vapid.json
+.env
+backend/.env
+
+# Logs
+*.log
+backend/server.log
+backend/server.err.log

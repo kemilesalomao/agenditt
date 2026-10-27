@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administração Geral — AgendIt</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0B10; --bg-2: #0F0F16; --surface: #15151D; --surface-2: #1B1B24;
+      --border: rgba(255,255,255,0.08);
+      --gold: #D4AF37; --gold-hair: rgba(212,175,55,0.35); --gold-soft: rgba(212,175,55,0.1);
+      --gold-grad: linear-gradient(135deg, #F3DEA0 0%, #D4AF37 45%, #B8942F 100%);
+      --text: #F5F1E8; --muted: #9C9AA6; --muted-2: #6E6D7A;
+      --green: #34D399; --red: #FB7185; --blue: #60A5FA; --yellow: #FDE047;
+      --brand: #D4AF37;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+
+    .sidebar { width: 258px; background: #0E0E13; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 50; }
+    .sidebar-header { padding: 22px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-mark img { height: 34px; width: auto; display: block; }
+    .sidebar-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; }
+    .sidebar-title span { color: var(--gold); }
+    .nav-menu { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .nav-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 500; font-size: 0.92rem; border-radius: 12px; border: 1px solid transparent; cursor: pointer; background: none; width: 100%; font-family: 'Inter', sans-serif; text-align: left; transition: all 0.2s; }
+    .nav-item .ico { width: 20px; text-align: center; font-size: 1.02rem; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav-item.active { background: var(--gold-soft); color: var(--gold); border-color: rgba(212,175,55,0.25); }
+    .plan-box { margin: 12px; padding: 16px; border-radius: 16px; background: linear-gradient(180deg, #191407 0%, #12100A 100%); border: 1px solid rgba(212,175,55,0.35); text-align: center; }
+    .plan-box small { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .plan-box b { display: block; color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-top: 4px; }
+
+    .main { flex: 1; overflow-y: auto; padding: 28px 34px 60px; background: radial-gradient(900px 500px at 100% 0%, rgba(212,175,55,0.05), transparent 55%); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+    .biz-id { display: flex; align-items: center; gap: 12px; }
+    .biz-logo { width: 44px; height: 44px; border-radius: 13px; object-fit: cover; background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.35); }
+    .biz-id b { display: block; font-size: 1.02rem; }
+    .biz-id small { color: var(--muted-2); font-size: 0.76rem; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .plan-badge { font-size: 0.74rem; font-weight: 700; color: var(--gold); border: 1px solid var(--gold-hair); background: var(--gold-soft); border-radius: 999px; padding: 6px 14px; white-space: nowrap; }
+    .avatar-btn { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px 6px 6px; cursor: pointer; color: var(--text); font-family: 'Inter', sans-serif; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold-grad); color: #1A1405; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .avatar-btn b { font-size: 0.85rem; }
+    .profile-wrap { position: relative; }
+    .profile-drop { position: absolute; top: 52px; right: 0; width: 240px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8); z-index: 200; display: none; overflow: hidden; }
+    .profile-drop.show { display: block; }
+    .profile-head { padding: 16px; border-bottom: 1px solid var(--border); }
+    .profile-head b { display: block; font-size: 0.92rem; }
+    .profile-head small { color: var(--muted); font-size: 0.78rem; display: block; margin-top: 2px; }
+    .profile-drop button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; background: none; border: none; color: var(--muted); font-size: 0.88rem; cursor: pointer; font-family: 'Inter', sans-serif; text-align: left; }
+    .profile-drop button:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+    .page-head h2 { font-size: 1.7rem; font-weight: 600; }
+    .page-head p { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+    .head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; position: relative; overflow: hidden; transition: 0.25s; }
+    .stat-card::after { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold-grad); opacity: 0.9; }
+    .stat-card:hover { transform: translateY(-3px); border-color: rgba(212,175,55,0.3); }
+    .stat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .stat-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--gold-soft); border: 1px solid rgba(212,175,55,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; }
+    .stat-card h3 { font-size: 0.76rem; color: var(--muted); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; font-family: 'Inter', sans-serif; }
+    .stat-card .value { font-size: 1.85rem; font-weight: 700; font-family: 'Playfair Display', serif; color: var(--gold); margin-top: 2px; }
+    .stat-card .hint { font-size: 0.78rem; color: var(--muted-2); margin-top: 6px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 24px; }
+    .panel-title { font-family: 'Playfair Display', serif; font-size: 1.12rem; margin-bottom: 4px; }
+    .panel-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 18px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+    .search { flex: 1; min-width: 200px; position: relative; }
+    .search input { width: 100%; padding: 11px 14px 11px 38px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 11px; color: var(--text); font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; }
+    .search input:focus { border-color: var(--gold-hair); }
+    .search::before { content: '🔍'; position: absolute; left: 13px; top: 10px; font-size: 0.9rem; opacity: 0.6; }
+    select.filter, input.filter { padding: 11px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 11px; color: var(--text); font-size: 0.88rem; outline: none; font-family: 'Inter', sans-serif; color-scheme: dark; }
+    select.filter option { background: var(--surface-2); }
+    .chip { padding: 9px 18px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.83rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.2s; }
+    .chip.active, .chip:hover { background: var(--gold-grad); color: #1A1405; border-color: transparent; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 11px; font-weight: 700; font-size: 0.88rem; font-family: 'Inter', sans-serif; cursor: pointer; border: none; transition: 0.2s; text-decoration: none; }
+    .btn-gold { background: var(--gold-grad); color: #1A1405; box-shadow: 0 8px 20px -8px rgba(212,175,55,0.6); }
+    .btn-gold:hover { transform: translateY(-1px); }
+    .btn-ghost { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--gold); border-color: var(--gold-hair); }
+    .btn-danger { background: rgba(251,113,133,0.12); color: #FDA4AF; border: 1px solid rgba(251,113,133,0.3); }
+    .btn-warn { background: rgba(250,204,21,0.12); color: var(--yellow); border: 1px solid rgba(250,204,21,0.3); }
+    .btn-ok { background: rgba(52,211,153,0.12); color: #6EE7B7; border: 1px solid rgba(52,211,153,0.3); }
+    .btn-sm { padding: 7px 13px; font-size: 0.78rem; border-radius: 8px; }
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 13px 18px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: rgba(255,255,255,0.025); font-weight: 600; color: var(--gold); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    td { color: #CFCDD6; font-size: 0.9rem; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.015); }
+    tbody tr.clickable { cursor: pointer; }
+    .badge { padding: 4px 12px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; white-space: nowrap; display: inline-block; }
+    .b-green { background: rgba(52,211,153,0.12); color: #6EE7B7; }
+    .b-red { background: rgba(251,113,133,0.12); color: #FDA4AF; }
+    .b-yellow { background: rgba(250,204,21,0.12); color: var(--yellow); }
+    .b-blue { background: rgba(96,165,250,0.12); color: #93C5FD; }
+    .b-gray { background: rgba(255,255,255,0.07); color: var(--muted); }
+    .b-gold { background: var(--gold-soft); color: var(--gold); }
+    .empty { text-align: center; padding: 50px 20px; color: var(--muted); }
+    .empty .big { font-size: 2.4rem; margin-bottom: 10px; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(5,5,8,0.75); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s; padding: 16px; }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 26px; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; transform: scale(0.95); transition: 0.2s; }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal.lg { max-width: 900px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; }
+    .modal-header h3 { font-size: 1.25rem; }
+    .modal-close { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); cursor: pointer; color: var(--muted); font-size: 18px; flex-shrink: 0; }
+    .modal-close:hover { color: var(--gold); border-color: var(--gold-hair); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+    .detail-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--muted); }
+    .detail-value { font-weight: 600; text-align: right; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 7px; font-weight: 600; font-size: 0.78rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+    .form-control { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 11px; outline: none; font-size: 0.93rem; font-family: 'Inter', sans-serif; color: var(--text); color-scheme: dark; }
+    .form-control:focus { border-color: var(--gold-hair); box-shadow: 0 0 0 3px rgba(212,175,55,0.12); }
+    select.form-control option { background: var(--surface-2); }
+    textarea.form-control { min-height: 80px; resize: vertical; }
+    .form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 560px) { .form-2 { grid-template-columns: 1fr; } }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 14px 20px; border-radius: 14px; font-weight: 500; font-size: 0.9rem; box-shadow: 0 16px 40px rgba(0,0,0,0.5); border: 1px solid; animation: slideIn 0.3s ease; max-width: 360px; }
+    .toast.success { background: rgba(6,95,70,0.95); color: #A7F3D0; border-color: rgba(52,211,153,0.4); }
+    .toast.error { background: rgba(127,29,29,0.95); color: #FECACA; border-color: rgba(251,113,133,0.4); }
+    .toast.info { background: rgba(30,41,59,0.95); color: #BFDBFE; border-color: rgba(96,165,250,0.4); }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+    .act-item { display: flex; gap: 13px; padding: 12px 4px; border-bottom: 1px solid var(--border); font-size: 0.88rem; align-items: flex-start; }
+    .act-item:last-child { border-bottom: none; }
+    .act-ico { width: 34px; height: 34px; border-radius: 10px; background: var(--gold-soft); border: 1px solid rgba(212,175,55,0.25); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .act-item small { color: var(--muted-2); display: block; margin-top: 2px; font-size: 0.76rem; }
+    .sec-title { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--gold); margin: 22px 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .sec-title:first-of-type { margin-top: 4px; }
+    .sub-list { display: flex; flex-direction: column; gap: 8px; }
+    .sub-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; font-size: 0.88rem; flex-wrap: wrap; }
+    .sub-item b { display: block; }
+    .sub-item small { color: var(--muted-2); }
+    .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .sidebar-toggle { display: none; }
+    @media (max-width: 900px) {
+      .sidebar { position: fixed; left: -260px; top: 0; bottom: 0; transition: left 0.3s; box-shadow: 8px 0 30px rgba(0,0,0,0.5); }
+      .sidebar.open { left: 0; }
+      .sidebar-toggle { display: flex; position: fixed; top: 16px; left: 16px; z-index: 60; width: 44px; height: 44px; border-radius: 12px; background: var(--gold-grad); color: #1A1405; border: none; font-size: 20px; align-items: center; justify-content: center; cursor: pointer; }
+      .main { padding: 20px 14px 60px; padding-top: 76px; }
+      .page-head h2 { font-size: 1.4rem; }
+      .cards-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .page-head { flex-direction: column; }
+      .head-actions { width: 100%; }
+      .head-actions .btn { width: 100%; }
+      .toolbar .btn, .toolbar .chip { flex: 1; justify-content: center; }
+      .modal { max-width: none; border-radius: 18px; padding: 22px 18px; max-height: 92vh; }
+      .modal-overlay { padding: 10px; align-items: flex-end; }
+      .panel { padding: 18px 14px; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark"><img src="Agendit_logo-wt-nobg.png" alt="AgendIt" onerror="this.style.display='none'"></div>
+      <div class="sidebar-title">Agend<span>It</span></div>
+    </div>
+    <nav class="nav-menu">
+      <button class="nav-item active" data-page="dashboard"><span class="ico">📊</span> Dashboard</button>
+      <button class="nav-item" data-page="assinantes"><span class="ico">💳</span> Assinantes</button>
+      <button class="nav-item" data-page="empresas"><span class="ico">🏢</span> Empresas</button>
+      <button class="nav-item" data-page="config"><span class="ico">⚙️</span> Configurações</button>
+    </nav>
+    <div class="plan-box">
+      <small>Administrador Geral</small>
+      <b id="adminName">—</b>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="biz-id">
+        <img class="biz-logo" src="Agendit_logo-wt-nobg.png" alt="" onerror="this.style.display='none'">
+        <div>
+          <b id="topName">Administração Geral</b>
+          <small>Controle total da plataforma AgendIt</small>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="plan-badge">👑 ADMIN</span>
+        <div class="profile-wrap">
+          <button class="avatar-btn" id="avatarBtn">
+            <span class="avatar" id="avatarInitial">A</span>
+            <b id="avatarName">Admin</b>
+          </button>
+          <div class="profile-drop" id="profileDrop">
+            <div class="profile-head">
+              <b id="dropName">Admin</b>
+              <small id="dropEmail">—</small>
+            </div>
+            <button id="btnLogout">🚪 Sair</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="page active" id="pg-dashboard">
+      <div class="page-head">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Visão geral da plataforma em tempo real.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="btnRefreshDash">↻ Atualizar</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="dashCards"></div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Saúde da plataforma</div>
+          <div class="panel-sub">Recursos globais em uso.</div>
+          <div id="dashPlatform"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Distribuição de assinaturas</div>
+          <div class="panel-sub">Status atual dos assinantes.</div>
+          <div id="dashDist"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ASSINANTES ===== -->
+    <section class="page" id="pg-assinantes">
+      <div class="page-head">
+        <div>
+          <h2>Assinantes</h2>
+          <p>Gestão de planos, cobranças e acessos.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="search"><input type="text" id="subSearch" placeholder="Buscar por empresa, e-mail ou telefone..."></div>
+        <select class="filter" id="subFilter">
+          <option value="">Todas as assinaturas</option>
+          <option value="active">Ativas</option>
+          <option value="pending">Pendentes/Teste</option>
+          <option value="suspended">Suspensas</option>
+          <option value="cancelled">Canceladas</option>
+        </select>
+        <button class="btn btn-ghost" id="btnRefreshSubs">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Empresa</th><th>Proprietário</th><th>Plano</th><th>Próx. cobrança</th><th>Assinatura</th><th>Conta</th><th></th></tr></thead>
+            <tbody id="subsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== EMPRESAS ===== -->
+    <section class="page" id="pg-empresas">
+      <div class="page-head">
+        <div>
+          <h2>Empresas</h2>
+          <p>Todas as empresas cadastradas na plataforma.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="btnRefreshBiz">↻ Atualizar</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="search"><input type="text" id="bizSearch" placeholder="Buscar empresa..."></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Empresa</th><th>Segmento</th><th>Plano</th><th>Serviços</th><th>Profissionais</th><th>Agendamentos</th><th>Status</th><th></th></tr></thead>
+            <tbody id="bizBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CONFIGURAÇÕES ===== -->
+    <section class="page" id="pg-config">
+      <div class="page-head">
+        <div>
+          <h2>Configurações da plataforma</h2>
+          <p>Dados gerais, planos, checkout e mensagens do sistema.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-gold" id="btnSaveConfig">💾 Salvar</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">Identidade e contato</div>
+          <div class="panel-sub">Informações exibidas na plataforma.</div>
+          <div class="form-group"><label>Nome da plataforma</label><input class="form-control" id="cfgName"></div>
+          <div class="form-group"><label>Arquivo do logotipo</label><input class="form-control" id="cfgLogo" placeholder="Agendit_logo-wt-nobg.png"></div>
+          <div class="form-2">
+            <div class="form-group"><label>E-mail de contato</label><input class="form-control" id="cfgEmail" type="email" placeholder="contato@agendit.com"></div>
+            <div class="form-group"><label>Telefone de contato</label><input class="form-control" id="cfgPhone" placeholder="(11) 99999-9999"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Checkout e planos</div>
+          <div class="panel-sub">Link de pagamento e valores exibidos.</div>
+          <div class="form-group"><label>Link de checkout (Kiwify)</label><input class="form-control" id="cfgKiwify" placeholder="https://pay.kiwify.com.br/..."></div>
+          <div class="form-group"><label>Preço do 1º mês (promocional)</label><input class="form-control" id="cfgTrial" type="number" step="0.01" min="0"></div>
+          <div class="form-2">
+            <div class="form-group"><label>Plano Básico (R$)</label><input class="form-control cfg-plan" data-plan="Básico" type="number" step="0.01" min="0"></div>
+            <div class="form-group"><label>Plano Profissional (R$)</label><input class="form-control cfg-plan" data-plan="Profissional" type="number" step="0.01" min="0"></div>
+            <div class="form-group"><label>Plano Premium (R$)</label><input class="form-control cfg-plan" data-plan="Premium" type="number" step="0.01" min="0"></div>
+            <div class="form-group"><label>Plano Gratuito (R$)</label><input class="form-control cfg-plan" data-plan="Gratuito" type="number" step="0.01" min="0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Mensagens do sistema</div>
+        <div class="panel-sub">Avisos exibidos aos usuários em situações específicas.</div>
+        <div class="grid-2">
+          <div class="form-group"><label>Aviso de assinatura cancelada</label><textarea class="form-control cfg-msg" data-msg="sub_cancelled" placeholder="Sua assinatura foi cancelada..."></textarea></div>
+          <div class="form-group"><label>Aviso de pagamento pendente</label><textarea class="form-control cfg-msg" data-msg="payment_pending" placeholder="Aguardando confirmação..."></textarea></div>
+          <div class="form-group"><label>Aviso de conta suspensa</label><textarea class="form-control cfg-msg" data-msg="account_suspended" placeholder="Sua conta está suspensa..."></textarea></div>
+          <div class="form-group"><label>Aviso de conta bloqueada</label><textarea class="form-control cfg-msg" data-msg="account_blocked" placeholder="Sua conta foi bloqueada..."></textarea></div>
+        </div>
+        <div class="actions-bar"><button class="btn btn-gold" id="btnSaveConfig2">💾 Salvar configurações</button></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal genérico (detalhe do assinante) -->
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal lg" id="detailModal"></div>
+  </div>
+  <!-- Modal genérico (formulários) -->
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal" id="formModal"></div>
+  </div>
+  <!-- Modal de confirmação -->
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header"><h3 id="confirmTitle">Confirmar</h3><button class="modal-close" id="confirmX">✕</button></div>
+      <p id="confirmMsg" style="color:var(--muted);font-size:0.92rem;line-height:1.5"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="confirmNo">Cancelar</button>
+        <button class="btn btn-danger" id="confirmYes">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="adminapi.js"></script>
+  <script>
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const money = v => 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',');
+    const fmtD = s => { if (!s) return '—'; const d = new Date(s); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR'); };
+    const fmtDT = s => { if (!s) return '—'; const d = new Date(s); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+
+    const SUB_BADGE = { active: ['b-green', 'Ativa'], pending: ['b-yellow', 'Pendente'], suspended: ['b-red', 'Suspensa'], cancelled: ['b-red', 'Cancelada'], expired: ['b-gray', 'Expirada'] };
+    const USER_BADGE = { active: ['b-green', 'Ativa'], pending: ['b-yellow', 'Pendente'], suspended: ['b-red', 'Suspensa'], blocked: ['b-gray', 'Bloqueada'] };
+    const subBadge = st => { const x = SUB_BADGE[st] || ['b-gray', st || 'Sem registro']; return '<span class="badge ' + x[0] + '">' + x[1] + '</span>'; };
+    const userBadge = st => { const x = USER_BADGE[st] || ['b-gray', st || '—']; return '<span class="badge ' + x[0] + '">' + x[1] + '</span>'; };
+
+    function toast(msg, type) {
+      const t = document.createElement('div');
+      t.className = 'toast ' + (type || 'info');
+      t.textContent = msg;
+      $('#toasts').appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+    }
+
+    let CONFIRM_YES = null;
+    function confirmDlg(title, msg, onYes, yesLabel) {
+      $('#confirmTitle').textContent = title;
+      $('#confirmMsg').textContent = msg;
+      $('#confirmYes').textContent = yesLabel || 'Confirmar';
+      CONFIRM_YES = onYes;
+      $('#confirmOverlay').classList.add('show');
+    }
+    function closeConfirm() { $('#confirmOverlay').classList.remove('show'); CONFIRM_YES = null; }
+    $('#confirmYes').onclick = () => { const f = CONFIRM_YES; closeConfirm(); if (f) f(); };
+    $('#confirmNo').onclick = closeConfirm;
+    $('#confirmX').onclick = closeConfirm;
+
+    function openForm(html) { $('#formModal').innerHTML = html; $('#formOverlay').classList.add('show'); }
+    function closeForm() { $('#formOverlay').classList.remove('show'); }
+    $('#formOverlay').onclick = e => { if (e.target === $('#formOverlay')) closeForm(); };
+    function openDetail(html) { $('#detailModal').innerHTML = html; $('#detailOverlay').classList.add('show'); }
+    function closeDetail() { $('#detailOverlay').classList.remove('show'); }
+    $('#detailOverlay').onclick = e => { if (e.target === $('#detailOverlay')) closeDetail(); };
+
+    const TITLES = { dashboard: 'Dashboard', assinantes: 'Assinantes', empresas: 'Empresas', config: 'Configurações' };
+    function go(page) {
+      $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+      $$('.page').forEach(p => p.classList.toggle('active', p.id === 'pg-' + page));
+      $('#sidebar').classList.remove('open');
+      if (page === 'dashboard') loadDashboard();
+      if (page === 'assinantes') loadSubs();
+      if (page === 'empresas') loadBiz();
+      if (page === 'config') loadConfig();
+    }
+    $$('.nav-item').forEach(b => b.onclick = () => go(b.dataset.page));
+    $('#sidebarToggle').onclick = () => $('#sidebar').classList.toggle('open');
+    $('#avatarBtn').onclick = e => { e.stopPropagation(); $('#profileDrop').classList.toggle('show'); };
+    document.addEventListener('click', () => $('#profileDrop').classList.remove('show'));
+    $('#btnLogout').onclick = () => { AdminApi.logout(); window.location.replace('login.html'); };
+
+    /* ===== Dashboard ===== */
+    async function loadDashboard() {
+      try {
+        const d = await AdminApi.dashboard();
+        $('#dashCards').innerHTML = [
+          ['👥', 'Total de assinantes', d.totalSubscribers, 'empresas cadastradas'],
+          ['✅', 'Assinaturas ativas', d.activeSubs, 'acesso liberado'],
+          ['⛔', 'Assinaturas suspensas', d.suspendedSubs, 'pagamento pendente'],
+          ['🚫', 'Assinaturas canceladas', d.cancelledSubs, 'encerradas'],
+          ['🆕', 'Novos assinantes (mês)', d.newSubscribers, 'cadastros neste mês'],
+          ['⚠️', 'Contas pendentes', d.pendingUsers, 'aguardando ativação'],
+          ['🔒', 'Usuários bloqueados', d.blockedUsers, 'acesso bloqueado'],
+          ['💰', 'Receita do mês', money(d.monthlyRevenue), 'pagamentos confirmados']
+        ].map(c => '<div class="stat-card"><div class="stat-top"><span class="stat-ico">' + c[0] + '</span></div><h3>' + c[1] + '</h3><div class="value">' + c[2] + '</div><div class="hint">' + c[3] + '</div></div>').join('');
+        const p = d.platform;
+        $('#dashPlatform').innerHTML = [
+          ['Serviços cadastrados', p.services],
+          ['Profissionais', p.staff],
+          ['Agendamentos', p.appointments],
+          ['Tabelas no banco', p.db]
+        ].map(r => '<div class="detail-row"><span class="detail-label">' + r[0] + '</span><span class="detail-value">' + r[1] + '</span></div>').join('');
+        $('#dashDist').innerHTML = [
+          ['Ativas', d.activeSubs, 'b-green'],
+          ['Suspensas', d.suspendedSubs, 'b-yellow'],
+          ['Canceladas', d.cancelledSubs, 'b-red'],
+          ['Contas bloqueadas', d.blockedUsers, 'b-gray']
+        ].map(r => '<div class="detail-row"><span class="detail-label">' + r[0] + '</span><span class="badge ' + r[2] + '">' + r[1] + '</span></div>').join('');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    $('#btnRefreshDash').onclick = loadDashboard;
+
+    /* ===== Assinantes ===== */
+    let SUBS = [];
+    async function loadSubs() {
+      try {
+        SUBS = await AdminApi.subscribers();
+        paintSubs();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    function paintSubs() {
+      const q = ($('#subSearch').value || '').toLowerCase().trim();
+      const f = $('#subFilter').value;
+      let list = SUBS.filter(s => {
+        const hay = [s.name, s.owner_name, s.email, s.whatsapp, s.phone].join(' ').toLowerCase();
+        const okQ = !q || hay.includes(q);
+        const st = s.sub_status || 'pending';
+        let okF = true;
+        if (f === 'cancelled') okF = (st === 'cancelled' || st === 'expired');
+        else if (f) okF = st === f;
+        return okQ && okF;
+      });
+      if (!list.length) { $('#subsBody').innerHTML = '<tr><td colspan="7"><div class="empty"><div class="big">💳</div><p>Nenhum assinante encontrado.</p></div></td></tr>'; return; }
+      $('#subsBody').innerHTML = list.map(s => (
+        '<tr class="clickable" data-id="' + esc(s.id) + '">' +
+        '<td><b>' + esc(s.name || 'Sem nome') + '</b><br><small style="color:var(--muted-2)">' + esc(s.segment || s.slug || '') + '</small></td>' +
+        '<td>' + esc(s.owner_name || '—') + '<br><small style="color:var(--muted-2)">' + esc(s.email || '') + '</small></td>' +
+        '<td><span class="badge b-gold">' + esc(s.plan_name || s.plan || '—') + '</span></td>' +
+        '<td>' + fmtD(s.next_billing) + '</td>' +
+        '<td>' + subBadge(s.sub_status) + '</td>' +
+        '<td>' + userBadge(s.user_status) + '</td>' +
+        '<td><button class="btn btn-ghost btn-sm">Ver</button></td>' +
+        '</tr>'
+      )).join('');
+      $$('#subsBody tr.clickable').forEach(tr => tr.onclick = () => openSubscriber(tr.dataset.id));
+    }
+    $('#subSearch').oninput = paintSubs;
+    $('#subFilter').onchange = paintSubs;
+    $('#btnRefreshSubs').onclick = loadSubs;
+
+    /* ===== Empresas ===== */
+    let BIZ = [];
+    async function loadBiz() {
+      try { BIZ = await AdminApi.businesses(); paintBiz(); } catch (e) { toast(e.message, 'error'); }
+    }
+    function paintBiz() {
+      const q = ($('#bizSearch').value || '').toLowerCase().trim();
+      const b = BIZ.filter(x => !q || [x.name, x.slug, x.segment, x.owner_name, x.email].join(' ').toLowerCase().includes(q));
+      if (!b.length) { $('#bizBody').innerHTML = '<tr><td colspan="8"><div class="empty"><div class="big">🏢</div><p>Nenhuma empresa encontrada.</p></div></td></tr>'; return; }
+      $('#bizBody').innerHTML = b.map(x => (
+        '<tr class="clickable" data-id="' + esc(x.id) + '">' +
+        '<td><b>' + esc(x.name || 'Sem nome') + '</b><br><small style="color:var(--muted-2)">' + esc(x.email || '') + '</small></td>' +
+        '<td>' + esc(x.segment || '—') + '</td>' +
+        '<td><span class="badge b-gold">' + esc(x.plan_name || x.plan || '—') + '</span></td>' +
+        '<td>' + x.svc + '</td><td>' + x.stf + '</td><td>' + x.apc + '</td>' +
+        '<td>' + subBadge(x.sub_status) + '</td>' +
+        '<td><button class="btn btn-ghost btn-sm">Ver</button></td>' +
+        '</tr>'
+      )).join('');
+      $$('#bizBody tr.clickable').forEach(tr => tr.onclick = () => openSubscriber(tr.dataset.id));
+    }
+    $('#bizSearch').oninput = paintBiz;
+    $('#btnRefreshBiz').onclick = loadBiz;
+
+    /* ===== Detalhe do assinante ===== */
+    async function openSubscriber(id) {
+      try {
+        const d = await AdminApi.subscriber(id);
+        const b = d.business, sub = d.subscription || {}, o = d.owner || {};
+        const st = sub.status || 'pending';
+        const ustatus = (o && o.status) || '—';
+        const canSuspend = st !== 'suspended';
+        const canReactivate = st === 'suspended' || st === 'cancelled' || st === 'expired';
+        const canCancel = st !== 'cancelled' && st !== 'expired';
+        const usersHtml = d.users.map(u => (
+          '<div class="sub-item"><div><b>' + esc(u.name || '—') + '</b><small>' + esc(u.email) + ' · ' + esc(u.role) + '</small></div>' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + userBadge(u.status) +
+          '<button class="btn btn-ghost btn-sm" data-act="edit-user" data-uid="' + esc(u.id) + '">Editar</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="pass-user" data-uid="' + esc(u.id) + '">Redefinir senha</button>' +
+          (u.role !== 'admin' ? '<button class="btn btn-danger btn-sm" data-act="del-user" data-uid="' + esc(u.id) + '" data-name="' + esc(u.name) + '">Excluir</button>' : '') +
+          '</div></div>'
+        )).join('') || '<div class="empty" style="padding:20px"><p>Nenhum usuário.</p></div>';
+        const payHtml = d.payments.length ? d.payments.map(p => (
+          '<div class="detail-row"><span class="detail-label">' + fmtDT(p.paid_at || p.created_at) + (p.order_id ? ' · pedido ' + esc(p.order_id) : '') + '</span>' +
+          '<span class="detail-value">' + money(p.amount_reais) + ' <span class="badge ' + (p.status === 'paid' ? 'b-green' : 'b-yellow') + '">' + esc(p.status) + '</span></span></div>'
+        )).join('') : '<div class="empty" style="padding:20px"><p>Nenhum pagamento registrado.</p></div>';
+        const evHtml = d.events.length ? d.events.map(e => (
+          '<div class="act-item"><span class="act-ico">' + eventIcon(e.type) + '</span><div><b>' + esc(e.detail || e.type) + '</b><small>' + fmtDT(e.created_at) + (e.actor ? ' · ' + esc(e.actor) : '') + '</small></div></div>'
+        )).join('') : '<div class="empty" style="padding:20px"><p>Sem histórico.</p></div>';
+        const svcHtml = d.services.map(s => '<div class="detail-row"><span class="detail-label">' + esc(s.name) + ' ' + (s.active ? '' : '<span class="badge b-gray">inativo</span>') + '</span><span class="detail-value">' + money(s.price) + ' · ' + esc(s.duration) + 'min</span></div>').join('') || '<div class="empty" style="padding:20px"><p>Nenhum serviço.</p></div>';
+        const staffHtml = d.staff.map(s => '<div class="detail-row"><span class="detail-label">' + esc(s.name) + ' ' + (s.active ? '' : '<span class="badge b-gray">inativo</span>') + '</span><span class="detail-value">' + esc(s.role || '') + '</span></div>').join('') || '<div class="empty" style="padding:20px"><p>Nenhum profissional.</p></div>';
+
+        openDetail(
+          '<div class="modal-header"><h3>' + esc(b.name || 'Empresa') + '</h3>' +
+          '<div style="display:flex;gap:8px;align-items:center">' + subBadge(st) + userBadge(ustatus) + '<button class="modal-close" id="detailX">✕</button></div></div>' +
+          '<div class="grid-2">' +
+            '<div>' +
+              '<div class="sec-title">Proprietário</div>' +
+              '<div class="detail-row"><span class="detail-label">Nome</span><span class="detail-value">' + esc(o.name || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">E-mail</span><span class="detail-value">' + esc(o.email || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">WhatsApp</span><span class="detail-value">' + esc(b.whatsapp || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Segmento</span><span class="detail-value">' + esc(b.segment || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Cadastro</span><span class="detail-value">' + fmtDT(b.createdAt) + '</span></div>' +
+            '</div>' +
+            '<div>' +
+              '<div class="sec-title">Assinatura</div>' +
+              '<div class="detail-row"><span class="detail-label">Plano</span><span class="detail-value">' + esc(sub.plan_name || b.plan || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Valor</span><span class="detail-value">' + money(sub.price_reais) + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Próxima cobrança</span><span class="detail-value">' + fmtD(sub.next_billing) + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Válida até</span><span class="detail-value">' + fmtDT(sub.paid_until) + '</span></div>' +
+              '<div class="detail-row"><span class="detail-label">Agendamentos / Clientes</span><span class="detail-value">' + d.counts.appointments + ' / ' + d.counts.clients + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="actions-bar">' +
+            (canSuspend ? '<button class="btn btn-warn btn-sm" data-act="suspend">⏸ Suspender</button>' : '') +
+            (canReactivate ? '<button class="btn btn-ok btn-sm" data-act="reactivate">▶ Reativar</button>' : '') +
+            (canCancel ? '<button class="btn btn-danger btn-sm" data-act="cancel">✕ Cancelar assinatura</button>' : '') +
+            '<button class="btn btn-ghost btn-sm" data-act="plan">🔄 Alterar plano</button>' +
+            (ustatus === 'blocked' ? '<button class="btn btn-ok btn-sm" data-act="unblock">🔓 Desbloquear acesso</button>' : '<button class="btn btn-danger btn-sm" data-act="block">🔒 Bloquear acesso</button>') +
+          '</div>' +
+          '<div class="sec-title">Usuários</div><div class="sub-list">' + usersHtml + '</div>' +
+          '<div class="actions-bar"><button class="btn btn-gold btn-sm" data-act="new-user">➕ Novo usuário</button></div>' +
+          '<div class="sec-title">Pagamentos</div>' + payHtml +
+          '<div class="sec-title">Histórico de eventos</div>' + evHtml +
+          '<div class="grid-2">' +
+            '<div><div class="sec-title">Serviços</div>' + svcHtml + '</div>' +
+            '<div><div class="sec-title">Profissionais</div>' + staffHtml + '</div>' +
+          '</div>'
+        );
+        $('#detailX').onclick = closeDetail;
+        bindDetailActions(b, sub, ustatus);
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    function eventIcon(t) {
+      return ({ paid: '💳', created: '🆕', cancelled: '✕', reactivated: '▶', suspended: '⏸', plan_changed: '🔄', access_blocked: '🔒', access_unblocked: '🔓' }[t]) || '•';
+    }
+    function bindDetailActions(b, sub, ustatus) {
+      const id = b.id;
+      const run = async (fn, okMsg) => {
+        try { await fn(); toast(okMsg, 'success'); openSubscriber(id); loadSubs(); } catch (e) { toast(e.message, 'error'); }
+      };
+      $('#detailModal').querySelectorAll('[data-act]').forEach(btn => {
+        const act = btn.dataset.act;
+        btn.onclick = () => {
+          if (act === 'suspend') confirmDlg('Suspender assinatura', 'A empresa "' + b.name + '" perderá o acesso até a reativação. Confirmar?', () => run(() => AdminApi.suspend(id), 'Assinatura suspensa.'), 'Suspender');
+          else if (act === 'reactivate') run(() => AdminApi.reactivate(id), 'Assinatura reativada.');
+          else if (act === 'cancel') confirmDlg('Cancelar assinatura', 'Cancelar definitivamente a assinatura de "' + b.name + '"? O acesso será encerrado ao fim do período.', () => run(() => AdminApi.cancelSubscription(id), 'Assinatura cancelada.'), 'Cancelar');
+          else if (act === 'block') confirmDlg('Bloquear acesso', 'Bloquear imediatamente o acesso de "' + b.name + '" à plataforma?', () => run(() => AdminApi.block(id), 'Acesso bloqueado.'), 'Bloquear');
+          else if (act === 'unblock') run(() => AdminApi.unblock(id), 'Acesso desbloqueado.');
+          else if (act === 'plan') changePlanDialog(id, sub.plan_name || b.plan);
+          else if (act === 'new-user') newUserDialog(id);
+          else if (act === 'edit-user') editUserDialog(id, btn.dataset.uid);
+          else if (act === 'pass-user') resetPassDialog(btn.dataset.uid);
+          else if (act === 'del-user') confirmDlg('Excluir usuário', 'Excluir "' + btn.dataset.name + '"? Esta ação não pode ser desfeita.', () => run(() => AdminApi.deleteUser(btn.dataset.uid), 'Usuário excluído.'), 'Excluir');
+        };
+      });
+    }
+    function changePlanDialog(id, current) {
+      openForm(
+        '<div class="modal-header"><h3>Alterar plano</h3><button class="modal-close" onclick="closeForm()">✕</button></div>' +
+        '<div class="form-group"><label>Novo plano</label><select class="form-control" id="planSel">' +
+        ['Básico', 'Profissional', 'Premium', 'Gratuito'].map(p => '<option value="' + p + '"' + (p === current ? ' selected' : '') + '>' + p + '</option>').join('') +
+        '</select></div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeForm()">Cancelar</button>' +
+        '<button class="btn btn-gold" id="planOk">Salvar plano</button></div>'
+      );
+      $('#planOk').onclick = async () => {
+        try { await AdminApi.changePlan(id, $('#planSel').value); toast('Plano alterado.', 'success'); closeForm(); openSubscriber(id); loadSubs(); }
+        catch (e) { toast(e.message, 'error'); }
+      };
+    }
+    function newUserDialog(id) {
+      openForm(
+        '<div class="modal-header"><h3>Novo usuário</h3><button class="modal-close" onclick="closeForm()">✕</button></div>' +
+        '<div class="form-group"><label>Nome</label><input class="form-control" id="uName"></div>' +
+        '<div class="form-group"><label>E-mail</label><input class="form-control" id="uEmail" type="email"></div>' +
+        '<div class="form-2"><div class="form-group"><label>Senha</label><input class="form-control" id="uPass" type="text" placeholder="mínimo 6 caracteres"></div>' +
+        '<div class="form-group"><label>Função</label><select class="form-control" id="uRole"><option value="owner">Proprietário</option><option value="staff">Funcionário</option></select></div></div>' +
+        '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeForm()">Cancelar</button><button class="btn btn-gold" id="uOk">Criar usuário</button></div>'
+      );
+      $('#uOk').onclick = async () => {
+        try {
+          await AdminApi.createUser(id, { name: $('#uName').value, email: $('#uEmail').value, password: $('#uPass').value, role: $('#uRole').value });
+          toast('Usuário criado.', 'success'); closeForm(); openSubscriber(id);
+        } catch (e) { toast(e.message, 'error'); }
+      };
+    }
+    function editUserDialog(bid, uid) {
+      AdminApi.subscriber(bid).then(d => {
+        const u = d.users.find(x => x.id === uid); if (!u) return;
+        openForm(
+          '<div class="modal-header"><h3>Editar usuário</h3><button class="modal-close" onclick="closeForm()">✕</button></div>' +
+          '<div class="form-group"><label>Nome</label><input class="form-control" id="eName" value="' + esc(u.name) + '"></div>' +
+          '<div class="form-group"><label>E-mail</label><input class="form-control" id="eEmail" type="email" value="' + esc(u.email) + '"></div>' +
+          '<div class="form-2"><div class="form-group"><label>Função</label><select class="form-control" id="eRole">' +
+          ['owner', 'staff'].map(r => '<option value="' + r + '"' + (u.role === r ? ' selected' : '') + '>' + (r === 'owner' ? 'Proprietário' : 'Funcionário') + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Status</label><select class="form-control" id="eStatus">' +
+          ['active', 'pending', 'suspended', 'blocked'].map(s => '<option value="' + s + '"' + (u.status === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div></div>' +
+          '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeForm()">Cancelar</button><button class="btn btn-gold" id="eOk">Salvar</button></div>'
+        );
+        $('#eOk').onclick = async () => {
+          try {
+            await AdminApi.updateUser(uid, { name: $('#eName').value, email: $('#eEmail').value, role: $('#eRole').value, status: $('#eStatus').value });
+            toast('Usuário atualizado.', 'success'); closeForm(); openSubscriber(bid);
+          } catch (e) { toast(e.message, 'error'); }
+        };
+      }).catch(e => toast(e.message, 'error'));
+    }
+    function resetPassDialog(uid) {
+      openForm(
+        '<div class="modal-header"><h3>Redefinir senha</h3><button class="modal-close" onclick="closeForm()">✕</button></div>' +
+        '<div class="form-group"><label>Nova senha</label><input class="form-control" id="rPass" type="text" placeholder="mínimo 6 caracteres"></div>' +
+        '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeForm()">Cancelar</button><button class="btn btn-gold" id="rOk">Redefinir</button></div>'
+      );
+      $('#rOk').onclick = async () => {
+        try { await AdminApi.resetPassword(uid, $('#rPass').value); toast('Senha redefinida.', 'success'); closeForm(); }
+        catch (e) { toast(e.message, 'error'); }
+      };
+    }
+
+    /* ===== Configurações ===== */
+    async function loadConfig() {
+      try {
+        const c = await AdminApi.config();
+        $('#cfgName').value = c.platformName || '';
+        $('#cfgLogo').value = c.logo || '';
+        $('#cfgEmail').value = c.contactEmail || '';
+        $('#cfgPhone').value = c.contactPhone || '';
+        $('#cfgKiwify').value = c.kiwifyLink || '';
+        $('#cfgTrial').value = c.trialFirstMonth != null ? c.trialFirstMonth : '';
+        $$('.cfg-plan').forEach(i => { const v = (c.plans || {})[i.dataset.plan]; i.value = v != null ? v : ''; });
+        $$('.cfg-msg').forEach(t => { t.value = (c.systemMessages || {})[t.dataset.msg] || ''; });
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    async function saveConfig() {
+      const plans = {}; $$('.cfg-plan').forEach(i => { if (i.value !== '') plans[i.dataset.plan] = Number(i.value); });
+      const msgs = {}; $$('.cfg-msg').forEach(t => { if (t.value.trim()) msgs[t.dataset.msg] = t.value.trim(); });
+      try {
+        await AdminApi.saveConfig({
+          platformName: $('#cfgName').value, logo: $('#cfgLogo').value, contactEmail: $('#cfgEmail').value,
+          contactPhone: $('#cfgPhone').value, kiwifyLink: $('#cfgKiwify').value, trialFirstMonth: $('#cfgTrial').value,
+          plans, systemMessages: msgs
+        });
+        toast('Configurações salvas.', 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+    $('#btnSaveConfig').onclick = saveConfig;
+    $('#btnSaveConfig2').onclick = saveConfig;
+
+    /* ===== init ===== */
+    (async function init() {
+      if (!AdminApi.token) { window.location.replace('login.html'); return; }
+      try {
+        const me = await AdminApi.me();
+        if (!me || !me.user || me.user.role !== 'admin') { window.location.replace('dashboard.html'); return; }
+        const u = me.user;
+        $('#adminName').textContent = u.name || 'Administrador';
+        $('#topName').textContent = 'Administração Geral';
+        $('#avatarName').textContent = u.name || 'Admin';
+        $('#dropName').textContent = u.name || 'Administrador';
+        $('#dropEmail').textContent = u.email || '';
+        $('#avatarInitial').textContent = (u.name || 'A').charAt(0).toUpperCase();
+        loadDashboard();
+      } catch (e) { window.location.replace('login.html'); }
+    })();
+  </script>
+</body>
+</html>
